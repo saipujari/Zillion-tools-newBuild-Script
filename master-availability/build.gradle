@@ -1,0 +1,43 @@
+group 'Zillion'
+version '1.0-SNAPSHOT'
+
+
+apply plugin: 'java'//java plugin//
+apply plugin: 'idea'//java plugin//
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.zillion,ReportTool'//
+    }
+}
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+repositories {    //Adding Internal Maven repository which is been used by the Zillion group//
+
+    mavenCentral()
+    maven {
+
+
+        url "https://zillion-maven.s3.amazonaws.com/"
+
+    }
+}
+dependencies { //Adding the dependencies//
+
+    compile(
+
+            'com.fasterxml.jackson.core:jackson-annotations:2.6.4',//group id:version:artifacts ID//
+            'com.fasterxml.jackson.core:jackson-core:2.6.3',
+            'com.fasterxml.jackson.core:jackson-databind:2.6.3',
+            'joda-time:joda-time:2.3',
+            'org.json:json:20151123',
+            'log4j:log4j:1.2.17',
+            'oracle.oracle-jdbc:ojdbc7:12.1.0.2',
+            'com.zillion.code:ReportTool:1.0',
+            'com.zillion.com:ClassMergeTool:1.0'//Maven Internal repository//
+
+
+    )
+
+
+}

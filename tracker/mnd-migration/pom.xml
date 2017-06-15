@@ -1,0 +1,143 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.zillion</groupId>
+  <artifactId>MigrateMNDUtil</artifactId>
+  <packaging>jar</packaging>
+  <version>1.0-SNAPSHOT</version>
+  <name>ZillionUtils</name>
+  <url>http://maven.apache.org</url>
+  <repositories>
+    <repository>
+        <id>zillion</id>
+        <name>Zillon Maven Repo</name>
+        <layout>default</layout>
+        <url>https://zillion-maven.s3.amazonaws.com/</url>
+    </repository>
+  </repositories>
+  <dependencies>
+  <dependency>
+	    <groupId>com.fasterxml.jackson.core</groupId>
+	    <artifactId>jackson-annotations</artifactId>
+	    <version>2.7.4</version>
+	</dependency> 
+
+	<dependency>
+	    <groupId>com.fasterxml.jackson.core</groupId>
+	    <artifactId>jackson-core</artifactId>
+	    <version>2.7.4</version>
+	</dependency>
+	<dependency>
+	    <groupId>com.fasterxml.jackson.core</groupId>
+	    <artifactId>jackson-databind</artifactId>
+	    <version>2.7.4</version>
+	</dependency>
+  <dependency>
+  	<groupId>mysql</groupId>
+  	<artifactId>mysql-connector-java</artifactId>
+  	<version>5.1.6</version>
+  </dependency>
+   <dependency>
+	    <groupId>org.apache.httpcomponents</groupId>
+	    <artifactId>httpclient</artifactId>
+	    <version>4.1.2</version>
+	</dependency> 
+	<dependency>
+	    <groupId>org.apache.httpcomponents</groupId>
+	    <artifactId>httpcore</artifactId>
+	    <version>4.4.4</version>
+   </dependency>
+	  <dependency>
+	    <groupId>commons-logging</groupId>
+	    <artifactId>commons-logging</artifactId>
+	    <version>1.1.1</version>
+	</dependency>
+      <dependency>
+         <groupId>oracle</groupId>
+         <artifactId>oracle-jdbc</artifactId>
+         <version>12.1.0.2</version>
+      </dependency>
+  </dependencies> 
+  <build>
+		<finalName>MigrateMNDUtil</finalName>
+		<resources>
+			  <resource>
+			    <directory>src/main/resources</directory>
+			    <excludes>
+			      <exclude>**/*.properties</exclude>
+			    </excludes>  
+			  </resource>
+			</resources>
+	
+		<plugins>
+		
+			<!-- Make this jar executable -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+                <version>2.6</version>
+				<configuration>
+				
+				  <archive>
+					<manifest>
+					   <addClasspath>true</addClasspath>
+						<!-- Jar file entry point -->
+						<mainClass>com.zillion.MigrateMNDWeight</mainClass>
+						<classpathPrefix>dependency-jars/</classpathPrefix>
+						
+					</manifest>
+					<manifestEntries>
+                      <Class-Path>conf/</Class-Path>
+                    </manifestEntries>
+				  </archive>
+				</configuration>
+			</plugin>
+           <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.5.1</version>
+				<executions>
+				  <execution>
+					<id>copy-dependencies</id>
+					<phase>package</phase>
+					<goals>
+						<goal>copy-dependencies</goal>
+					</goals>
+					<configuration>					
+					  <includeScope>test</includeScope>					  
+					  <outputDirectory>${project.build.directory}/dependency-jars/</outputDirectory>
+					</configuration>
+				  </execution>
+				</executions>
+			</plugin>
+         
+			<plugin>
+		    <artifactId>maven-resources-plugin</artifactId>
+		    <version>2.6</version>
+		    <executions>
+		      <execution>
+		        <id>copy-resources</id>
+		        <phase>validate</phase>
+		        <goals>
+		          <goal>copy-resources</goal>
+		        </goals>
+		        <configuration>
+		          <outputDirectory>${project.build.directory}/conf</outputDirectory>
+		          <resources>
+		            <resource>
+		              <directory>src/main/resources</directory>
+		                     <includes>
+		                       <include>**/*.properties</include>
+		                    </includes>
+		            </resource>
+		          </resources>
+		        </configuration>
+		      </execution>
+		    </executions>
+		  </plugin>
+			
+		</plugins>
+	</build>
+  
+  
+</project>

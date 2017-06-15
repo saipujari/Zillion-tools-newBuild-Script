@@ -1,0 +1,162 @@
+{
+	"oauthtoken" : "d931928a371a2c2881ab2ee40ac32933dbbf3a4cb957949a559498353d27c703", //"DEV space 2.0" token
+	"spaceid" : "uaa09ql9k0rz",
+	"innerRedirect" : "",
+	"entryMappings" : {
+		"Content" : {
+			"uniqueKey" : ["recipe_id", "rname"],
+			"mappings" : [
+				{
+					"entryTypeId" : "67N49siK884QEeA8uQ86ey",
+					"mapping" : [
+						{
+							"from" : ["recipe_id"],
+							"to" : "recipeNumber",
+							"delimiters" : ["", ""]
+						},
+						{
+							"from" : ["rname"],
+							"to" : "recipeTitle",
+							"delimiters" : ["", ""]
+						},
+						{
+							"from" : ["yields"],
+							"to" : "yieldValue",
+							"delimiters" : ["", ""],
+							"forceAsString" : true
+						},
+						{
+							"from" : ["time_ready"],
+							"to" : "preparationTimeValue",
+							"delimiters" : ["", ""]
+						},
+						{
+							"from" : ["summary", "ingredients", "directions"],
+							"to" : "recipeContent",
+							"delimiters" : ["", "", "", ""]
+						},
+						{
+							"from" : ["calories", "calories_fat", "total_fat", "saturated_fat", "trans_fat", "cholesterol", "sodium", "carb", "fiber", "sugar", "protein"],
+							"to" : "nutritionFactsRichText",
+							"delimiters" : ["calories: ", "<br/>calories from fat: ", "<br/>total fat: ", "<br/>saturated fat: ", "<br/>trans fat: ", "<br/> cholesterol: ", "<br/>sodium: ", "<br/>carbs: ", "<br/>fiber: ", "<br/>sugar: ", "<br/>protein: ", ""]
+						},
+						{
+							"from" : ["rname"],
+							"to" : "moduleKeyword",
+							"delimiters" : ["", ""],
+							"replaceThis" : " ",
+							"withThis" : ","
+						}
+					],
+					"defaults" : [
+						{
+							"to" : "moduleKeyword",
+							"value" : "ORBERA"
+						},
+						{
+							"to" : "moduleVersionNumber",
+							"value" : 1
+						},
+						{
+							"to" : "moduleExperienceTypeCode",
+							"value" : "ORBERA"
+						},
+						{
+							"to" : "moduleEntryDescription",
+							"value" : "Default Description for ORBERA Recipes"
+						},
+						{
+							"to" : "yieldLabel",
+							"value" : "Yield"
+						},
+						{
+							"to" : "preparationTimeLabel",
+							"value" : "Preparation time"
+						}
+					],
+					"links" : [],
+					"images" : []
+				},
+				{
+					"entryTypeId" : "16cqEGHkksoeC2musKO2w0",
+					"uniqueIdentifier" : "recipe_id",
+					"mapping" : [
+						{
+							"from" : ["rname"],
+							"to" : "txtContentEntryTitle",
+							"delimiters" : ["", ""]
+						},
+						{
+							"from" : ["edit_date"],
+							"to" : "txtContentPublishedDate",
+							"delimiters" : ["", ""],
+							"formatAsDate" : {
+								"incomingFormat" : "MM/dd/yy H:mm",
+								"outgoingFormat" : "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+							}
+						},
+						{
+							"from" : ["seo_keywords"],
+							"to" : "txtContentEntryTags",
+							"delimiters" : ["", ""]
+						}
+					],
+					"defaults" : [
+						{
+							"to" : "moduleEntryDescription",
+							"value" : "Default Description for ORBERA Recipes"
+						},
+						{
+							"to" : "moduleKeyword",
+							"value" : "ORBERA"
+						},
+						{
+							"to" : "moduleExperienceTypeCode",
+							"value" : "ORBERA"
+						},
+						{
+							"to" : "moduleVersionNumber",
+							"value" : 1
+						},
+						{
+							"to" : "selectContentEntryCategory",
+							"value" : "Recipes"
+						},
+						{
+							"to" : "selectEntryType",
+							"value" : "Recipe"
+						},
+						{
+							"to" : "txtBtnText",
+							"value" : "View Recipe"
+						},
+						{
+							"to" : "txtCreatedBy",
+							"value" : "Orbera Team"
+						},
+						{
+							"to" : "txtContentDescription",
+							"value" : "This is the default description"
+						}
+					],
+					"links" : [
+						{
+							"to" : "referenceField",
+							"previousEntry" : "0"
+						}
+					],
+					"images" : [
+						{
+							"from" : "image",
+							"to" : "thumbnailSmall"
+						},
+						{
+							"from" : "image",
+							"to" : "thumbnailLarge"
+						}
+					]
+				}
+			]
+		}
+	}
+}

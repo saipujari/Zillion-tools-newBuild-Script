@@ -1,0 +1,388 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Contentful Sync Utility</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0">
+
+    <!-- styles -->
+    <link rel="stylesheet" href="scripts/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="scripts/lib/jsdiff//diffview.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <!-- end styles -->
+
+</head>
+
+<body ng-controller="UtilityController" class="ng-cloak">
+
+    <div class="bg-white-border-orange">
+        <div class="navbar-level navbar-system-user-header container-fluid row-centered">
+            <div class="col-xs-12 col-md-11 col-centered">
+                <div class="inline-table table-align-middle">
+                    <div class="inline-table-row">
+                        <img class="navbar-brand-top" src="https://images.contentful.com/uaa09ql9k0rz/6d2St7jZZYmsM20u2qYcek/cd55b39589d5b1631936e56f1059562c/Zillion.png"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="navbar navbar-default orange-nav-bar">
+            <div class="container-fluid">
+                <div class="col-xs-12 col-md-11">
+                    <div class="collapse navbar-collapse">
+                        <ul class="nav navbar-nav">
+                            <li class="active"><a href="#" class="nav-tab-active"><i class="glyphicon glyphicon-globe"></i> &nbsp;Sync Utility <span class="sr-only">(current)</span></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="navbar-level navbar-system-user-header container-fluid row-centered">
+            <div class="col-xs-12 col-md-11 col-centered">
+                <div class="inline-table col-xs-12 table-align-middle">
+                    <h3 class="header-text">
+                            Contentful Sync Utility
+                        </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container margin-top-10">
+
+        <div class="row">
+            <div class="col-md-12">
+                <h4>Choose options:</h4>
+                <ul class="list-inline">
+                    <li>
+                        <p>
+                            <input type="radio" name="SyncOptions" value="SYNC_ENTRIES" ng-model="syncOptions.option" ng-disabled="spaces.sourceSpace.cf_space.name"
+                            /> Sync Entries
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <input type="radio" name="SyncOptions" value="SPACE_DIFF" ng-model="syncOptions.option" ng-disabled="spaces.sourceSpace.cf_space.name"
+                            /> Space Difference
+                        </p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    <div class="row">
+
+            <div class="col-md-6">
+
+                <div class="space-container">
+
+                    <form name="formSourceSpace" id="formSourceSpace" novalidate role="form" ng-submit="loadCFClient(spaces.sourceSpace)">
+                        <fieldset class="content-location">
+                            <legend class="text-left">Contentful Source Space</legend>
+                            <div class="form-group">
+                                <span>* Contentful Access Code</span>
+                                <br/>
+                                <div>
+                                    <input type="text" name="accessCode" class="form-control" ng-model="spaces.sourceSpace.accessCode" ng-readonly="spaces.sourceSpace.cf_space.name"
+                                        required>
+                                    <span class="help-block-red" ng-show="formSourceSpace.accessCode.$error.required && formSourceSpace.accessCode.$touched">Contentful Access Code is required.</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <span>* Contentful Space</span>
+                                <br/>
+                                <div>
+                                    <input type="text" name="space" class="form-control" ng-model="spaces.sourceSpace.spaceId" required ng-readonly="spaces.sourceSpace.cf_space.name">
+                                    <span class="help-block-red" ng-show="formSourceSpace.space.$error.required && formSourceSpace.space.$touched">Contentful Space is required.</span>
+                                </div>
+                            </div>
+                            <div class="form-group" ng-hide="spaces.sourceSpace.cf_space.name">
+                                <input type="submit" class="btn btn-primary btn-orange" ng-disabled="formSourceSpace.$invalid" value="Load Space" />
+                                <a ng-click="clearSpace(spaces.sourceSpace)">Clear</a>
+                            </div>
+                        </fieldset>
+                    </form>
+
+                    <div ng-show="spaces.sourceSpace.cf_space.name || syncOptions.option === 'SPACE_DIFF'">
+                        <form id="formSourceSpaceEntries" name="formSourceSpaceEntries" novalidate ng-submit="syncEntries(spaces.sourceSpace)">
+                            <p><b>Space: </b> {{spaces.sourceSpace.cf_space.name}}</p>
+                            <div class="form-group">
+                                <span>Enter entry ids (comma separated)</span>
+                                <br/>
+                                <div>
+                                    <textarea rows="6" class="form-control" name="spaceEntries" ng-model="spaces.sourceSpace.entries" ng-required="syncOptions.option === 'SYNC_ENTRIES'"></textarea>
+                                    <span class="help-block-red" ng-show="formSourceSpaceEntries.spaceEntries.$error.required && formSourceSpaceEntries.spaceEntries.$touched">Required.</span>
+                                </div>
+                            </div>
+                            <div class="form-group no-margin">
+                                <input id="btnSyncSubmit" ng-if="syncOptions.option === 'SYNC_ENTRIES'" type="submit" class="btn btn-primary btn-orange"
+                                    ng-disabled="formSourceSpaceEntries.$invalid || !spaces.targetSpace.cf_space" value="Sync"
+                                    title="Please add entry(s) id/load target space" />
+
+                                <input id="btnSyncSubmit" ng-if="syncOptions.option === 'SPACE_DIFF'" type="submit" class="btn btn-primary btn-orange" ng-disabled="!spaces.targetSpace.cf_space"
+                                    value="Show Difference" title="Please load target space" />
+
+                                <a ng-click="cancelSpace(spaces.sourceSpace)">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="disable-overlay" ng-show="spaces.sourceSpace.loading">
+                        <div class="disable-overlay-content overlay-content-centered">
+                            <h4><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> {{spaces.sourceSpace.loadingText}}</h4>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-md-6">
+
+                <div class="space-container">
+
+                    <form name="formTargetSpace" id="formTargetSpace" novalidate role="form" ng-submit="loadCFClient(spaces.targetSpace)">
+                        <fieldset class="content-location">
+                            <legend class="text-left">Contentful Target Space</legend>
+                            <div class="form-group">
+                                <span>* Contentful Access Code</span>
+                                <br/>
+                                <div>
+                                    <input type="text" name="accessCode" class="form-control" ng-model="spaces.targetSpace.accessCode" required ng-readonly="spaces.targetSpace.cf_space.name">
+                                    <span class="help-block-red" ng-show="formTargetSpace.accessCode.$error.required && formTargetSpace.accessCode.$touched">Contentful Access Code is required.</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <span>* Contentful Space</span>
+                                <br/>
+                                <div>
+                                    <input type="text" name="space" class="form-control" ng-model="spaces.targetSpace.spaceId" required ng-readonly="spaces.targetSpace.cf_space.name">
+                                    <span class="help-block-red" ng-show="formTargetSpace.space.$error.required && formTargetSpace.space.$touched">Contentful Space is required.</span>
+                                </div>
+                            </div>
+                            <div class="form-group" ng-hide="spaces.targetSpace.cf_space.name">
+                                <input id="btnLoadTargetSpace" type="submit" class="btn btn-primary btn-orange" ng-disabled="formTargetSpace.$invalid" value="Load Space"
+                                />
+                                <a ng-click="clearSpace(spaces.targetSpace)">Clear</a>
+                            </div>
+                        </fieldset>
+                    </form>
+
+                    <div ng-show="spaces.targetSpace.cf_space.name">
+                        <p><b>Space: </b> {{spaces.targetSpace.cf_space.name}}</p>
+                        <div class="form-group">
+                            <a ng-click="cancelSpace(spaces.targetSpace)">Cancel</a>
+                        </div>
+                    </div>
+
+                    <div class="disable-overlay" ng-show="spaces.targetSpace.loading">
+                        <div class="disable-overlay-content overlay-content-centered">
+                            <h4><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> {{spaces.targetSpace.loadingText}}</h4>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div id="alertModal" class="modal fade blue-bordered" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <div class="modal-body font-15" ng-bind-html="alertModal.message|unsafe"></div>
+                        <div class="text-center padding-10">
+                            <button type="button" class="btn btn-info btn-small" id="btnAlertModelOk" data-dismiss="modal">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="confirmationModal" class="modal fade blue-bordered" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-md">
+                    <div class="modal-content">
+                        <div class="modal-body font-15">
+                            <p>{{confirmModal.message}}</p>
+                            <input type="checkbox" value="SYNC_C_ENTRIES" ng-model="confirmModal.option" /> Also sync entries
+                        </div>
+                        <div class="text-center padding-10">
+                            <button type="button" class="btn btn-info btn-small" id="btnConfirmationModalYes">Yes</button>
+                            <button type="button" class="btn btn-default btn-small" id="btnConfirmationModalNo" data-dismiss="modal">No</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="confirmationModalAsk" class="modal fade blue-bordered" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-md">
+                    <div class="modal-content">
+                        <div class="modal-body font-15">
+                            <p>{{confirmModal.message}}</p>
+                        </div>
+                        <div class="text-center padding-10">
+                            <button type="button" class="btn btn-info btn-small" id="btnModalYes">Yes</button>
+                            <button type="button" class="btn btn-default btn-small" id="btnModalNo" data-dismiss="modal">No</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div ng-class="ctrlConstants.blackout ? 'disable-overlay disable-overlay-fixed': 'disable-overlay'" ng-show="ctrlConstants.blackout">
+                <div class="disable-overlay-content overlay-content-centered">
+                    <h4>
+                        <span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
+                         <span>{{ctrlConstants.blackoutText}} </span> <span class="small progress-text">({{progressPercentage}}%)</span>
+                    </h4>
+                </div>
+            </div>
+
+            <div class="disable-overlay" ng-show="ctrlConstants.blackoutPleaseWait">
+                <div class="disable-overlay-content overlay-content-centered">
+                    <h4>
+                        <span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
+                        Please wait, fetching data...
+                    </h4>
+                </div>
+            </div>
+
+            <div id="syncEntriesDialog" class="modal fade" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4>Selected items(s)
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            </h4>
+                        </div>
+                        <p class="padding-10 no-pad-bt">Following items(s) will be synced to the target space:</p>
+                        <div class="scrollable padding-10 no-pad-tp">
+                            <ul class="list-group no-cursor">
+                                <li class="list-group-item" ng-repeat="syncEntry in syncEntriesList">
+                                    <a href="" title="ID: {{syncEntry.sys.id}}">
+                                        <p>{{pluckDescription(syncEntry)}} <span ng-class="syncEntry.sys.type === 'Asset'? 'label label-warning' : 'label label-success'">{{syncEntry.sys.type}}</span>                                            </p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="text-left padding-10">
+                            <input id="btnContinue" type="button" class="btn btn-primary btn-orange" value="Continue" />
+                            <a data-dismiss="modal">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="contentDiffDialog" class="modal fade" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4>{{alertModal.model.modelTitle}}
+                                <button type="button" class="close" data-dismiss="modal" ng-click="openContentTypeEntriesAccordionDialog(false)">&times;</button>
+                            </h4>
+                        </div>
+                        <p class="padding-10 no-pad-bt"><b>Total differences:</b> <span>({{showDiffCount(alertModal.model.modelContentType, alertModal.model.modelEntry, alertModal.model.type)}})</span></p>
+                        <div class="scrollable padding-10 no-pad-tp" id="divContentDiffDialog">
+                            <div id="diffOutputDiv"></div>
+                        </div>
+                        <div class="text-left padding-10">
+                            <input type="button" ng-click="syncFromDialog(alertModal.model.modelContentType, alertModal.model.modelEntry, alertModal.model.type)"
+                                class="btn btn-primary btn-orange" value="Sync from Source to Target" />
+                            <a data-dismiss="modal" ng-click="openContentTypeEntriesAccordionDialog(false)">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="contentTypeEntriesAccordionDialog" class="modal fade" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4>Space Content
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            </h4>
+                        </div>
+                        <p class="padding-10 no-pad-bt">{{(showMessage() === true) ? 'All Synced up.' : 'Please expand a content type to see its entries:' }}</p>
+                        <div class="scrollable padding-10 no-pad-tp" id="divContentTypeEntriesAccordionDialog">
+                            <div class="panel-group" id="contentTypeEntriesAccordion">
+                                <div class="panel panel-default" ng-repeat="(key, srcContentType) in spaces.sourceSpace.contentTypesEntriesMap">
+                                    <div class="panel-heading">
+                                        <h4 class="panel-title accordion-title">
+                                            <a data-toggle="collapse" data-parent="#contentTypeEntriesAccordion" href="#collapse{{key}}" title="ID: {{srcContentType.contentType.sys.id}}">
+                                                <i class="glyphicon glyphicon-chevron-right"></i> {{srcContentType.contentType.name}} ({{isNewEntriesInSpace(srcContentType.contentType, 'true').totalCount}})                                                                                              
+                                                <a href="#" ng-click="syncAllByContentType(srcContentType.contentType)" class="btn btn-link btn-show-diff">Sync All Entries </a>
+                                                <a href="#" ng-if="isNewEntriesInSpace(srcContentType.contentType, 'true').found" ng-click="syncNewEntries(srcContentType.contentType)" class="btn btn-link btn-show-diff">Sync New Entries</a>
+                                                <a href="#" ng-if="!isAnyDifference(srcContentType.contentType, 'contentType').found" ng-click="openDiffViewModal(srcContentType.contentType, 'contentType', srcContentType.contentType.name)" class="btn btn-link btn-show-diff only-show-diff">Show Diff</a>
+                                            </a>
+                                        </h4>
+                                    </div>
+                                    <div id="collapse{{key}}" class="panel-collapse collapse">
+                                        <div class="panel-body">
+                                            <ul class="list-group">
+                                                <li ng-repeat-start="entry in srcContentType.entries" class="hide"></li>
+                                                <li ng-if="srcContentType.entries.length > 0 && !isAnyDifference(srcContentType.contentType, 'entries', entry).found" class="list-group-item">
+                                                    <div class="row">
+                                                        <div class="col-md-9">
+                                                            <label class="font-normal" title="ID: {{entry.sys.id}}">
+                                                               {{pluckDescription(entry)}} - {{entry.sys.id}} <span ng-if="isAnyDifference(srcContentType.contentType, 'entries', entry).status === 'NOT_IN_TARGET'" class="label label-success">New</span>
+                                                            </label>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <a href="#" ng-click="openDiffViewModal(srcContentType.contentType, 'entries', pluckDescription(entry), entry)" class="btn btn-link btn-show-diff">Show Diff</a>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                                <li class="list-group-item" ng-if="srcContentType.entries.length === 0">
+                                                    <p class="text-center">
+                                                        No data found
+                                                    </p>
+                                                </li>
+                                                <li ng-repeat-end class="hide"></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-left padding-10">
+                            <a data-dismiss="modal">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- For logging -->
+        <div class="row">
+            <div ng-class="ctrlConstants.blackout ? 'col-md-12 bring-to-front': 'col-md-12'">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Logs: </h4>
+                    </div>
+                    <div class="col-md-6 text-right" ng-if="logging.length > 0">
+                        <a href="#!" class="btn btn-orange" ng-click="copyToClipboard()"> Copy</a>
+                        <a href="#!" ng-click="clearLogWindow()"> Clear</a>
+                    </div>
+                </div>
+                <div class="logging-container" id="divLoggingContainer">
+                    <ul class="list-group no-margin">
+                        <li ng-repeat="log in logging">
+                            <p class="padding-10 no-margin" ng-class="log.color" ng-bind-html="log.message|unsafe"></p>
+                        </li>
+                        <li ng-if="logging.length === 0">
+                            <p class="padding-10 no-margin">No logs</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- For copying -->
+    <textarea class="copy-text-area"></textarea>
+</body>
+
+<!-- scripts -->
+<script data-main="js/main" src="scripts/lib/requirejs/require.min.js"></script>
+<!-- end scripts -->
+
+</html>

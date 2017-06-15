@@ -1,0 +1,128 @@
+{
+	"oauthtoken" : "d931928a371a2c2881ab2ee40ac32933dbbf3a4cb957949a559498353d27c703", //"DEV space 2.0" token
+	"spaceid" : "uaa09ql9k0rz",
+	"innerRedirect" : "library/viewArticle?id=",
+	"entryMappings" : {
+		"Content" : {
+			"uniqueKey" : ["id", "title"],
+			"mappings" : [
+				{
+					"entryTypeId" : "7njMyjuURaOgyiwKA2Y4OU",
+					"mapping" : [
+						{
+							"from" : ["id"],
+							"to" : "articleNumber",
+							"delimiters" : ["", ""]
+						},
+						{
+							"from" : ["title"],
+							"to" : "title",
+							"delimiters" : ["", ""]
+						},
+						{
+							"from" : ["title"],
+							"to" : "articleTitle",
+							"delimiters" : ["", ""]
+						},
+						{
+							"from" : ["introtext"],
+							"to" : "articleDescription",
+							"delimiters" : ["", ""]
+						}
+					],
+					"defaults" : [
+						{
+							"to" : "moduleVersionNumber",
+							"value" : 1
+						},
+						{
+							"to" : "moduleKeyword",
+							"value" : "ORBERA"
+						},
+						{
+							"to" : "moduleExperienceTypeCode",
+							"value" : "ORBERA"
+						},
+						{
+							"to" : "moduleEntryDescription",
+							"value" : "Default Description for ORBERA Articles"
+						}
+					],
+					"links" : [],
+					"images" : []
+				},
+				{
+					"entryTypeId" : "16cqEGHkksoeC2musKO2w0",
+					"uniqueIdentifier" : "id",
+					"mapping" : [
+						{
+							"from" : ["title"],
+							"to" : "txtContentEntryTitle",
+							"delimiters" : ["", ""]
+						},
+						{
+							"from" : ["metakey"],
+							"to" : "txtContentEntryTags",
+							"delimiters" : ["", ""]
+						},
+						{
+							"from" : ["publish_up"],
+							"to" : "txtContentPublishedDate",
+							"delimiters" : ["", ""]
+						},
+						{
+							"from" : ["featured"],
+							"to" : "featuredContent",
+							"delimiters" : ["", ""]
+						}
+					],
+					"defaults" : [
+						{
+							"to" : "moduleEntryDescription",
+							"value" : "Default Description for ORBERA Articles"
+						},
+						{
+							"to" : "moduleKeyword",
+							"value" : "ORBERA"
+						},
+						{
+							"to" : "moduleExperienceTypeCode",
+							"value" : "ORBERA"
+						},
+						{
+							"to" : "moduleVersionNumber",
+							"value" : 1
+						},
+						{
+							"to" : "selectContentEntryCategory",
+							"value" : "Other"
+						},
+						{
+							"to" : "selectEntryType",
+							"value" : "Article"
+						},
+						{
+							"to" : "txtBtnText",
+							"value" : "View Article"
+						},
+						{
+							"to" : "txtCreatedBy",
+							"value" : "Orbera Team"
+						},
+						{
+							"to" : "txtContentDescription",
+							"value" : "This is the default description"
+						}
+					],
+					"links" : [
+						{
+							"to" : "referenceField",
+							"previousEntry" : "0"
+						}
+					],
+					"images" : []
+				}
+			]
+		}
+	}
+}

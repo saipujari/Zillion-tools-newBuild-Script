@@ -1,0 +1,53 @@
+/**
+ * Publishes given file (e.g. JAR) into Zillion Maven repository.
+ *
+ * Usage: 
+ *     gradle -b publish-s3.gradle [-Parg=val]    
+ *
+ * Command line arguments:
+ *     mvnGroupId    - Maven group ID
+ *     mvnArtifactId - Maven artifact ID
+ *     mvnVersion    - Maven artifact version number
+ *     mvnFile       - File to publish to repository
+ *
+ * Gradle properties:
+ *     awsAccessKey - AWS user access key
+ *     awsSecretKey - AWS user secret key  
+ */
+apply plugin: 'maven-publish'
+
+
+['awsAccessKey', 'awsSecretKey'].each {
+    if (!project.hasProperty(it)) throw new GradleException("Required property [$it] not found")    
+}
+
+['mvnGroupId', 'mvnArtifactId', 'mvnVersion', 'mvnFile'].each {
+    if (!project.hasProperty(it)) throw new GradleException("Required argument [$it] not specified")    
+}
+
+def mvnArtifact = file(mvnFile)
+if (!mvnArtifact.exists()) {
+    throw new GradleException("File [$mvnFile] not found")
+}
+
+defaultTasks 'publish'
+
+publishing {
+    repositories {
+        maven {
+            url "s3://zillion-maven.s3.amazonaws.com/releases"
+            credentials(AwsCredentials) {
+                accessKey awsAccessKey
+                secretKey awsSecretKey
+            }
+        }
+    }
+    publications {
+        myPub(MavenPublication) {
+            groupId mvnGroupId
+            artifactId mvnArtifactId
+            version mvnVersion
+            artifacts = [mvnArtifact]
+        }
+    }
+}

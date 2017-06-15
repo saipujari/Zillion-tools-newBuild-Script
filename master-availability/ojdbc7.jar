@@ -1,0 +1,16 @@
+Pre-requisites :
+============
+
+Code will be used to generated the report week by week.
+Will comment the other lines.
+
+Steps to run
+============
+
+AvailabilityLoader.java is the file will be used to generate the report.
+
+AvailabilityLoader.getQueriesForWeek1
+AvailabilityLoader.getQueriesForWeek2
+AvailabilityLoader.getQueriesForWeek3
+AvailabilityLoader.getQueriesForWeek4
+AvailabilityLoader.getQueriesForWeek5

@@ -1,0 +1,175 @@
+#!/bin/bash
+
+# this script is intended to run within the Oracle DB appliance:
+# http://www.oracle.com/technetwork/database/enterprise-edition/databaseappdev-vm-161299.html
+
+help() {
+  echo "Usage: copydb -s <url> -u <user> -p <pass> -i <id> [-c <cmd>|-h]"
+  echo "   -s <url>  source database URL"
+  echo "   -u <user> source database username"
+  echo "   -p <pass> source database password"
+  echo "   -i <id>   unique job identifier to prevent overriding other users"
+  echo "   -c <cmd>  specific command to run:"
+  echo "                all     : (default) all steps in proper sequecne"
+  echo "                setup   : setup local table space"
+  echo "                export  : export source database into dump file"
+  echo "                move    : move dump file to local"
+  echo "                import  : import dump file into local database"
+  echo "                cleanup : cleanup temporary files"
+  echo "   -h        displays usage help"
+}
+
+err() {
+  echo "ERROR: $1, use -h for help"
+  exit 1
+}
+
+setup_db() {
+echo "Setting up local tablespace..."    
+sql -S system/oracle <<EOF
+  CREATE BIGFILE TABLESPACE $TABLESPACE DATAFILE '$DATA_FILE' SIZE 10M AUTOEXTEND ON;
+  CREATE USER $SRC_USER IDENTIFIED BY $SRC_PASS DEFAULT TABLESPACE $TABLESPACE;
+  ALTER USER "$SRC_USER" DEFAULT ROLE NONE;
+  GRANT ADVISOR TO "$SRC_USER";
+  GRANT CREATE TYPE TO "$SRC_USER";
+  GRANT CREATE MATERIALIZED VIEW TO "$SRC_USER";
+  GRANT CREATE TRIGGER TO "$SRC_USER";
+  GRANT CREATE PROCEDURE TO "$SRC_USER";
+  GRANT CREATE ROLE TO "$SRC_USER";
+  GRANT CREATE DATABASE LINK TO "$SRC_USER";
+  GRANT CREATE SEQUENCE TO "$SRC_USER";
+  GRANT CREATE VIEW TO "$SRC_USER";
+  GRANT CREATE PUBLIC SYNONYM TO "$SRC_USER";
+  GRANT CREATE ANY INDEX TO "$SRC_USER";
+  GRANT CREATE TABLE TO "$SRC_USER";
+  GRANT ALTER SESSION TO "$SRC_USER";
+  GRANT CREATE SESSION TO "$SRC_USER";
+  GRANT "CONNECT" TO "$SRC_USER";
+  GRANT "RESOURCE" TO "$SRC_USER";
+  ALTER USER "$SRC_USER" QUOTA UNLIMITED ON "$TABLESPACE";
+  CREATE OR REPLACE DIRECTORY DATA_PUMP_DIR_1 AS '/u01/app/oracle/admin/orcl12c/dpdump';
+  GRANT READ, WRITE ON DIRECTORY data_pump_dir_1 TO $SRC_USER;
+  CREATE DATABASE LINK $DB_LINK CONNECT TO $SRC_USER IDENTIFIED BY $SRC_PASS USING '$SRC_URL';
+  exit
+EOF
+}
+
+export_db() {
+  echo "Exporting source database..."  
+  expdp $SRC_USER/$SRC_PASS@$SRC_URL directory=data_pump_dir schemas=$SRC_USER dumpfile=$DUMP_FILE logfile=$LOG_FILE job_name="JOB_${JOB_ID}"
+}
+
+move_db() {
+echo "Moving the dump file..."    
+sql -S system/oracle <<EOF
+  BEGIN
+    DBMS_FILE_TRANSFER.get_file(
+      source_directory_object      => 'DATA_PUMP_DIR',
+      source_file_name             => '$DUMP_FILE',
+      source_database              => '$DB_LINK',
+      destination_directory_object => 'DATA_PUMP_DIR_1',
+      destination_file_name        => '$DUMP_FILE'
+    );
+  END;
+  /
+  exit
+EOF
+}
+
+import_db() {
+  echo "Importing into local database..."  
+  impdp $SRC_USER/$SRC_PASS DIRECTORY=DATA_PUMP_DIR_1 DUMPFILE=$DUMP_FILE LOGFILE=DATA_PUMP_DIR_1:$LOG_FILE SCHEMAS=$SRC_USER TABLE_EXISTS_ACTION=REPLACE EXCLUDE=GRANT
+}
+
+cleanup_db() {
+echo "Cleaning up..."    
+sql -S $SRC_USER/$SRC_PASS@$DBURL <<EOF
+  exec utl_file.fremove('DATA_PUMP_DIR','$DUMP_FILE');
+  exec utl_file.fremove('DATA_PUMP_DIR','$LOG_FILE');
+  exit
+EOF
+}
+
+SRC_URL=""
+SRC_USER=""
+SRC_PASS=""
+JOB_ID=""
+RUN_CMD="all"
+
+while getopts ":s:u:p:i:c:h" opt; do
+  case $opt in
+    h)
+      help
+      exit 1
+      ;;
+    s)
+      SRC_URL=$OPTARG
+      ;;
+    u)
+      SRC_USER=$OPTARG
+      ;;
+    p)
+      SRC_PASS=$OPTARG
+      ;;
+    i)
+      JOB_ID=$OPTARG
+      ;;  
+    c)    
+      RUN_CMD=$OPTARG
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [ -z "$SRC_URL" ]; then
+  err "Source database URL is required"
+fi
+if [ -z "$SRC_USER" ]; then
+  err "Source database username is required"
+fi
+if [ -z "$SRC_PASS" ]; then
+  err "Source database password is required"
+fi
+if [ -z "$JOB_ID" ]; then
+  err "Unique job identifier is required"
+fi
+
+TABLESPACE=$SRC_USER
+DUMP_FILE="${TABLESPACE}_DUMP_${JOB_ID}.dmp"
+LOG_FILE="${TABLESPACE}_DUMP_${JOB_ID}.log"
+DATA_FILE="${TABLESPACE}_${JOB_ID}.dat"
+DB_LINK="${TABLESPACE}_RDS_${JOB_ID}"
+
+case "$RUN_CMD" in
+  setup)
+    setup_db
+    ;;
+  export)
+    export_db
+    ;;
+  move)
+    move_db
+    ;;
+  import)
+    import_db
+    ;;
+  cleanup)
+    cleanup_db
+    ;;
+  all)
+    setup_db
+    export_db
+    move_db
+    import_db
+    cleanup_db
+    ;;    
+  *)
+    err "Unknown command \"$RUN_CMD\""
+esac
